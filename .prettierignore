@@ -1,0 +1,4 @@
+api-extractor/**/*
+dist/**/*
+docs/**/*
+temp/**/*
