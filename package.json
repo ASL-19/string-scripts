@@ -37,28 +37,36 @@
     "default": "./dist/index.js"
   },
   "sideEffects": false,
+  "bin": {
+    "string-scripts": "./dist/scripts/string-scripts.js"
+  },
   "scripts": {
-    "api-extractor-check": "api-extractor run --verbose",
-    "api-extractor-update": "api-extractor run --local --verbose && api-documenter markdown --input-folder ./api-extractor --output-folder ./docs",
+    "build": "npm run rm-dist && npm run tsc",
     "build-lint-test": "npm-run-all -l -p tsc -s lint-test",
     "rm-dist": "rm -rf dist/*",
-    "dev": "npm-run-all -l -s package-changed -p tsc-watch",
-    "dev-build-update": "npm-run-all -l -p package-changed rm-dist -s tsc api-extractor-update",
-    "dev-lint-test": "run-s package-changed lint-test",
+    "dev": "npm-run-all -l -p tsc-watch",
     "eslint-check": "eslint . --ext='js,ts,tsx'",
     "eslint-fix": "eslint . --ext='js,ts,tsx' --fix",
-    "lint-test": "run-p -l api-extractor-check eslint-check prettier-check tsc-check",
-    "package-changed": "package-changed",
+    "lint-test": "run-p -l eslint-check prettier-check tsc-check",
     "prepublishOnly": "run-s rm-dist build-lint-test",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
     "npm-check-updates": "npm-check-updates",
     "tsc": "tsc --project tsconfig-dist.json",
     "tsc-watch": "tsc --project tsconfig-dist.json --watch",
-    "tsc-check": "tsc --project tsconfig-dist.json --noEmit"
+    "tsc-check": "tsc --project tsconfig-dist.json --noEmit",
+    "test-scripts": "npm run test-convert-csv-to-json && npm run test-convert-json-to-csv && npm run test-sync-strings",
+    "test-convert-csv-to-json": "node dist/scripts/convertStringsCsvToJson.js --help",
+    "test-convert-json-to-csv": "node dist/scripts/convertStringsJsonToCsv.js --help",
+    "test-sync-strings": "node dist/scripts/syncAndSortStrings.js --help"
   },
   "dependencies": {
-    "ts-pattern": "^5.7.1"
+    "@types/lodash": "^4.17.20",
+    "@types/yargs": "^17.0.33",
+    "csv-parse": "^6.1.0",
+    "lodash": "^4.17.21",
+    "ts-pattern": "^5.7.1",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "@asl-19/eslint-config": "^0.9.0",

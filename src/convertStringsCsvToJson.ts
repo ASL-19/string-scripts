@@ -63,10 +63,10 @@ const stringsCsvToValuesByFlatKeys = (
   const translationIndex = parsedHeaderLine.indexOf("Translation");
 
   const valuesByFlatKeys = parsedStringLines.reduce((acc, parsedStringLine) => {
-    /* eslint-disable security/detect-object-injection */
+     
     const keySegment = parsedStringLine[keyIndex];
     const valueSegment = parsedStringLine[translationIndex];
-    /* eslint-enable */
+     
 
     if (!keySegment || typeof valueSegment !== "string") {
       console.error("Provided CSV line is malformed:", parsedStringLine);
