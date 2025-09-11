@@ -13,12 +13,12 @@ const args = yargs(hideBin(process.argv))
   .options({
     in: {
       demandOption: true,
-      description: "CSV file path to convert (src/strings/strings*.csv)",
+      description: "CSV file path to convert",
       type: "string",
     },
     out: {
       demandOption: true,
-      description: "Output path of generated Strings JSON",
+      description: "Output path of generated JSON file",
       type: "string",
     },
   })
@@ -111,7 +111,6 @@ const valuesByFlatKeysToNestedObject = (
 // ==================
 
 const convertStringsCsvToJson = async () => {
-  /** @type {import("../types/stringTypes").Strings} */
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, security/detect-non-literal-fs-filename
   const currentLocaleStrings = JSON.parse(await readFile(args.out, "utf-8"));
 

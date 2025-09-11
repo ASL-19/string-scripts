@@ -11,9 +11,13 @@ import yargs from "yargs/yargs";
 
 const args = yargs(process.argv)
   .options({
+    english: {
+      description: "English JSON path (optional, for English translations)",
+      type: "string",
+    },
     in: {
       demandOption: true,
-      description: "Strings JSON path to convert (src/strings/strings*.json)",
+      description: "Strings JSON path to convert",
       type: "string",
     },
     out: {
@@ -21,9 +25,13 @@ const args = yargs(process.argv)
       description: "Output path of generated CSV file",
       type: "string",
     },
+    schema: {
+      description: "Schema JSON path (optional, for descriptions)",
+      type: "string",
+    },
   })
   .epilogue(
-    'Example: npm run -- convert-strings-json-to-csv --in=src/strings/stringsFa.json --out=src/strings/stringsFa.csv\n\nMake sure you prepend arguments with "--"! See https://docs.npmjs.com/cli/v9/commands/npm-run-script#description',
+    'Example: npm run -- convert-strings-json-to-csv --in=src/strings/stringsFa.json --out=src/strings/stringsFa.csv --schema=src/strings/strings.schema.json --english=src/strings/stringsEn.json\n\nMake sure you prepend arguments with "--"! See https://docs.npmjs.com/cli/v9/commands/npm-run-script#description',
   )
   .parseSync();
 
@@ -264,15 +272,23 @@ const jsonToCsv = (obj: Record<string, string>): string => {
 // ==================
 
 const convertStringsJsonToCsv = async () => {
-  const [schemaJsonRaw, englishJsonRaw, localeJsonRaw] = await Promise.all([
-    readFileAndParse("src/strings/strings.schema.json"),
-    readFileAndParse("src/strings/stringsEn.json"),
-    readFileAndParse(args.in),
-  ]);
-
-  const schemaJson = isObject(schemaJsonRaw) ? schemaJsonRaw : {};
-  const englishJson = isObject(englishJsonRaw) ? englishJsonRaw : {};
+  // Read the main locale file
+  const localeJsonRaw = await readFileAndParse(args.in);
   const localeJson = isObject(localeJsonRaw) ? localeJsonRaw : {};
+
+  // Read optional schema file if provided
+  let schemaJson = {};
+  if (args.schema) {
+    const schemaJsonRaw = await readFileAndParse(args.schema);
+    schemaJson = isObject(schemaJsonRaw) ? schemaJsonRaw : {};
+  }
+
+  // Read optional English file if provided
+  let englishJson = {};
+  if (args.english) {
+    const englishJsonRaw = await readFileAndParse(args.english);
+    englishJson = isObject(englishJsonRaw) ? englishJsonRaw : {};
+  }
 
   const nestedStringsObjectDescriptions =
     getNestedStringsObjectDescriptions(schemaJson);

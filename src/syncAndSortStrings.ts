@@ -2,16 +2,42 @@
 import { readFile, writeFile } from "fs/promises";
 import lodashMerge from "lodash/merge.js";
 import prettier from "prettier";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
-// =============
-// === Types ===
-// =============
+// ==============================
+// === Read and validate args ===
+// ==============================
+const args = yargs(hideBin(process.argv))
+  .options({
+    english: {
+      demandOption: true,
+      description: "Path to English JSON file to use as base for syncing",
+      type: "string",
+    },
+    files: {
+      demandOption: true,
+      description: "Comma-separated list of JSON file paths to sync and sort",
+      type: "string",
+    },
+  })
+  .epilogue(
+    'Example: npm run -- sync-strings --files=src/strings/stringsFa.json,src/strings/stringsAr.json --english=src/strings/stringsEn.json\n\nMake sure you prepend arguments with "--"! See https://docs.npmjs.com/cli/v9/commands/npm-run-script#description',
+  )
+  .parseSync();
 
-/**
- * @typedef {import("src/values/localeValues").LocaleCode} LocaleCode
- * @typedef {typeof import("src/values/localeValues").localeCodes} LocaleCodes
- * @typedef {import("src/types/stringTypes").Strings} Strings
- */
+if (!args.english.endsWith(".json")) {
+  console.error("--english argument must be a JSON path");
+  process.exit(1);
+}
+
+const filePaths = args.files.split(",").map((path) => path.trim());
+for (const filePath of filePaths) {
+  if (!filePath.endsWith(".json")) {
+    console.error(`File path "${filePath}" must be a JSON path`);
+    process.exit(1);
+  }
+}
 
 // =============
 // === Utils ===
@@ -43,104 +69,92 @@ function recursivelySortObjectByKeys(
 }
 
 /**
- * Get the provided locale’s strings file path.
+ * Read and parse a JSON file.
  *
- * @param {LocaleCode} localeCode
- * @returns string
+ * @param filePath - Path to the JSON file
+ * @returns Parsed JSON object
  */
-const localeCodeToStringsPath = (localeCode: Array<string>): string =>
-  `src/strings/strings${/** @type {string} */ localeCode[0].toUpperCase()}${
-    localeCode[1]
-  }.json`;
-
-/**
- * Get the provided locale’s strings.
- *
- * @param {LocaleCode} localeCode
- * @returns Strings
- */
-const localeCodeToStrings = async (
-  localeCode: Array<string>,
-): Promise<Record<string, unknown>> =>
+const readJsonFile = async (
+  filePath: string,
+): Promise<Record<string, unknown>> => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, security/detect-non-literal-fs-filename
-  JSON.parse(await readFile(localeCodeToStringsPath(localeCode), "utf-8"));
+  return JSON.parse(await readFile(filePath, "utf-8"));
+};
 
 /**
- * Sync new strings from English strings file to provided locale’s strings file;
+ * Sync new strings from English strings file to provided locale's strings file;
  * sort strings by key.
  */
-const syncAndSortLocaleStrings = async (
-  /**
-   * @type {{
-   *  localeCode: LocaleCode;
-   *  prettierOptions: import("prettier").Options;
-   * }}
-   */
-  {
-    localeCode,
-    prettierOptions,
-  }: { localeCode: Array<string>; prettierOptions: import("prettier").Options },
-) => {
+const syncAndSortLocaleStrings = async ({
+  englishStrings,
+  filePath,
+  prettierOptions,
+}: {
+  englishStrings: Record<string, unknown>;
+  filePath: string;
+  prettierOptions: import("prettier").Options;
+}) => {
   try {
-    const [enStrings, localeStrings] = await Promise.all([
-      localeCodeToStrings(["en"]),
-      localeCodeToStrings(localeCode),
-    ]);
+    const localeStrings = await readJsonFile(filePath);
 
     const mergedAndSortedStrings = recursivelySortObjectByKeys(
-      lodashMerge(enStrings, localeStrings),
+      lodashMerge(englishStrings, localeStrings),
     );
 
     const newStringValue = await prettier.format(
       JSON.stringify(mergedAndSortedStrings),
       {
         ...prettierOptions,
-        filepath: localeCodeToStringsPath(localeCode),
+        filepath: filePath,
       },
     );
 
     // eslint-disable-next-line security/detect-non-literal-fs-filename
-    await writeFile(
-      localeCodeToStringsPath(localeCode),
-      newStringValue,
-      "utf-8",
-    );
-  } catch {
+    await writeFile(filePath, newStringValue, "utf-8");
+
+    // eslint-disable-next-line no-console
+    console.log(`Successfully synced and sorted: ${filePath}`);
+  } catch (error) {
     console.warn(
-      `Not writing ${localeCode.join(",")} strings since an error occurred while merging its strings!`,
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+      `Not writing ${filePath} strings since an error occurred while merging its strings: ${error}`,
     );
   }
 };
 
-// ==============
-// === Values ===
-// ==============
-
-/**
- * @type {LocaleCodes}
- */
-const localeCodes: Array<string> = ["en", "fa"];
-
 // ================================================
-// === Sync and sort each locale code’s strings ===
+// === Sync and sort each provided file's strings ===
 // ================================================
 
 const syncAndSortStrings = async () => {
-  /**
-   * Prettier config for JSON files (resolved from English strings file).
-   */
-  const prettierOptions =
-    (await prettier.resolveConfig(localeCodeToStringsPath(["en"]))) ?? {};
+  try {
+    // Read the English strings file
+    const englishStrings = await readJsonFile(args.english);
 
-  // Note: We process the English strings file (despite it not needing to
-  // synchronize with itself) since it’s still useful for it to be auto-formatted
-  // with Prettier
-  localeCodes.forEach((localeCode) => {
-    void syncAndSortLocaleStrings({
-      localeCode: [localeCode],
-      prettierOptions,
-    });
-  });
+    /**
+     * Prettier config for JSON files (resolved from English strings file).
+     */
+    const prettierOptions = (await prettier.resolveConfig(args.english)) ?? {};
+
+    // Process each provided file
+    const promises = filePaths.map((filePath) =>
+      syncAndSortLocaleStrings({
+        englishStrings,
+        filePath,
+        prettierOptions,
+      }),
+    );
+
+    await Promise.all(promises);
+
+    // eslint-disable-next-line no-console
+    console.log(`Successfully processed ${filePaths.length} file(s)`);
+  } catch (error) {
+    console.error(
+      `Error processing files: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    process.exit(1);
+  }
 };
 
 void syncAndSortStrings();
