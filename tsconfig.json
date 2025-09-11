@@ -4,7 +4,8 @@
     "checkJs": true,
     "declaration": true,
     "incremental": true,
-    "module": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "outDir": "dist",
     "strict": true,
     "target": "es2021"

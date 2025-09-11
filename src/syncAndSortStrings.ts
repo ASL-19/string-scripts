@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
+#!/usr/bin/env tsx
 import { readFile, writeFile } from "fs/promises";
-import lodashMerge from "lodash/merge";
+import lodashMerge from "lodash/merge.js";
 import prettier from "prettier";
 
 // =============
@@ -26,23 +23,22 @@ import prettier from "prettier";
  * Modernized and simplified version of:
  * http://whitfin.io/sorting-object-recursively-node-jsjavascript/
  */
-function recursivelySortObjectByKeys(/** @type Object */ object) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+function recursivelySortObjectByKeys(
+  object: Record<string, unknown>,
+): Record<string, unknown> {
   const sortedKeys = [...Object.keys(object)].sort((key1, key2) =>
     key1 < key2 ? -1 : key1 > key2 ? 1 : 0,
   );
-
   const sortedObject = sortedKeys.reduce(
-    (acc, key) => ({
+    (acc: Record<string, unknown>, key: string) => ({
       ...acc,
       [key]:
-        typeof object[key] === "object"
-          ? recursivelySortObjectByKeys(object[key])
+        typeof object[key] === "object" && object[key] !== null
+          ? recursivelySortObjectByKeys(object[key] as Record<string, unknown>)
           : object[key],
     }),
     {},
   );
-
   return sortedObject;
 }
 
@@ -52,8 +48,8 @@ function recursivelySortObjectByKeys(/** @type Object */ object) {
  * @param {LocaleCode} localeCode
  * @returns string
  */
-const localeCodeToStringsPath = (localeCode) =>
-  `src/strings/strings${/** @type {string} */ (localeCode[0]).toUpperCase()}${
+const localeCodeToStringsPath = (localeCode: Array<string>): string =>
+  `src/strings/strings${/** @type {string} */ localeCode[0].toUpperCase()}${
     localeCode[1]
   }.json`;
 
@@ -63,7 +59,10 @@ const localeCodeToStringsPath = (localeCode) =>
  * @param {LocaleCode} localeCode
  * @returns Strings
  */
-const localeCodeToStrings = async (/** @type {LocaleCode} */ localeCode) =>
+const localeCodeToStrings = async (
+  localeCode: Array<string>,
+): Promise<Record<string, unknown>> =>
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, security/detect-non-literal-fs-filename
   JSON.parse(await readFile(localeCodeToStringsPath(localeCode), "utf-8"));
 
 /**
@@ -77,11 +76,14 @@ const syncAndSortLocaleStrings = async (
    *  prettierOptions: import("prettier").Options;
    * }}
    */
-  { localeCode, prettierOptions },
+  {
+    localeCode,
+    prettierOptions,
+  }: { localeCode: Array<string>; prettierOptions: import("prettier").Options },
 ) => {
   try {
     const [enStrings, localeStrings] = await Promise.all([
-      localeCodeToStrings("en"),
+      localeCodeToStrings(["en"]),
       localeCodeToStrings(localeCode),
     ]);
 
@@ -97,6 +99,7 @@ const syncAndSortLocaleStrings = async (
       },
     );
 
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
     await writeFile(
       localeCodeToStringsPath(localeCode),
       newStringValue,
@@ -104,7 +107,7 @@ const syncAndSortLocaleStrings = async (
     );
   } catch {
     console.warn(
-      `Not writing ${localeCode} strings since an error occurred while merging its strings!`,
+      `Not writing ${localeCode.join(",")} strings since an error occurred while merging its strings!`,
     );
   }
 };
@@ -116,7 +119,7 @@ const syncAndSortLocaleStrings = async (
 /**
  * @type {LocaleCodes}
  */
-const localeCodes = /** @type {const} */ (["en", "fa"]);
+const localeCodes: Array<string> = ["en", "fa"];
 
 // ================================================
 // === Sync and sort each locale code’s strings ===
@@ -127,13 +130,16 @@ const syncAndSortStrings = async () => {
    * Prettier config for JSON files (resolved from English strings file).
    */
   const prettierOptions =
-    (await prettier.resolveConfig(localeCodeToStringsPath("en"))) ?? {};
+    (await prettier.resolveConfig(localeCodeToStringsPath(["en"]))) ?? {};
 
   // Note: We process the English strings file (despite it not needing to
   // synchronize with itself) since it’s still useful for it to be auto-formatted
   // with Prettier
   localeCodes.forEach((localeCode) => {
-    void syncAndSortLocaleStrings({ localeCode, prettierOptions });
+    void syncAndSortLocaleStrings({
+      localeCode: [localeCode],
+      prettierOptions,
+    });
   });
 };
 

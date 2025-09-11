@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
+#!/usr/bin/env tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { readFile, writeFile } from "fs/promises";
 import yargs from "yargs/yargs";
@@ -41,8 +40,10 @@ if (!args.out.endsWith(".csv")) {
 /**
  * Get file content and convert to JS object
  */
-const readFileAndParse = async (/** @type {string} */ filePath) =>
-  JSON.parse(await readFile(filePath, "utf-8"));
+const readFileAndParse = async (filePath: string): Promise<unknown> => {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  return JSON.parse(await readFile(filePath, "utf-8"));
+};
 
 // =================
 // === Functions ===
@@ -51,17 +52,28 @@ const readFileAndParse = async (/** @type {string} */ filePath) =>
 /**
  * Converts the nested keys to flat dot-separated keys (sets $description keys).
  */
-const flattenObject = (obj, prefix = "") =>
-  Object.keys(obj).reduce((acc, key) => {
-    const newPrefix = prefix ? `${prefix}.${key}` : key;
+function isObject(val: unknown): val is Record<string, unknown> {
+  return typeof val === "object" && val !== null;
+}
 
-    return typeof obj[key] === "object" && obj[key] !== null
-      ? {
-          ...acc,
-          [newPrefix]: obj[key].$description || "",
-          ...flattenObject(obj[key], newPrefix),
-        }
-      : { ...acc, [newPrefix]: obj[key] };
+const flattenObject = (
+  obj: Record<string, unknown>,
+  prefix = "",
+): Record<string, string> =>
+  Object.keys(obj).reduce((acc: Record<string, string>, key: string) => {
+    const newPrefix = prefix ? `${prefix}.${key}` : key;
+    const value = obj[key];
+    if (isObject(value)) {
+      const desc =
+        typeof value.$description === "string" ? value.$description : "";
+      return {
+        ...acc,
+        [newPrefix]: desc,
+        ...flattenObject(value, newPrefix),
+      };
+    } else {
+      return { ...acc, [newPrefix]: String(value) };
+    }
   }, {});
 
 /**
@@ -70,7 +82,7 @@ const flattenObject = (obj, prefix = "") =>
  *
  * @param description {string | undefined}
  */
-const normalizeDescription = (description) =>
+const normalizeDescription = (description: string | undefined): string =>
   description !== undefined ? description.replace(/\n+/g, " ").trim() : "";
 
 /**
@@ -78,17 +90,25 @@ const normalizeDescription = (description) =>
  * creates new object that holds keys and description
  * description values are passed to descriptionCheck
  */
-const parseProperties = (outerValue, outerKeyObj) => {
+const parseProperties = (
+  outerValue: Record<string, unknown>,
+  outerKeyObj: Record<string, unknown>,
+): void => {
   for (const innerKey in outerValue) {
     const innerValue = outerValue[innerKey];
-
+    let description = "";
+    if (isObject(innerValue) && typeof innerValue.description === "string") {
+      description = normalizeDescription(innerValue.description) || "";
+    }
     // eslint-disable-next-line no-param-reassign
     outerKeyObj[innerKey] = {
-      $description: normalizeDescription(innerValue.description) || "",
+      $description: description,
     };
-
-    if (innerValue.properties) {
-      parseProperties(innerValue.properties, outerKeyObj[innerKey]);
+    if (isObject(innerValue) && isObject(innerValue.properties)) {
+      parseProperties(
+        innerValue.properties,
+        outerKeyObj[innerKey] as Record<string, unknown>,
+      );
     }
   }
 };
@@ -118,43 +138,50 @@ const parseProperties = (outerValue, outerKeyObj) => {
  * ```
  */
 const getNestedStringsObjectDescriptions = (
-  /** @type {Object} */ schemaJson,
-) => {
-  const stringsSchemaJson = {};
-
+  schemaJson: unknown,
+): Record<string, unknown> => {
+  if (!isObject(schemaJson)) return {};
+  const stringsSchemaJson: Record<string, unknown> = {};
+  const definitions = schemaJson.definitions;
+  if (!isObject(definitions)) return {};
+  const stringsDef = definitions.Strings;
+  if (!isObject(stringsDef) || !isObject(stringsDef.properties)) return {};
   const topLevelStringsKeys = Object.keys(
-    schemaJson.definitions.Strings.properties,
+    (stringsDef as Record<string, any>).properties,
   );
-
   topLevelStringsKeys.forEach((topLevelStringsKey) => {
     if (topLevelStringsKey === "$schema") {
       return;
     }
-
     const topLevelStringTypeName =
       topLevelStringsKey.charAt(0).toUpperCase() +
       topLevelStringsKey.slice(1) +
       "Strings";
-
-    const outerValue = schemaJson.definitions[topLevelStringTypeName];
-
-    if (outerValue.properties) {
-      const outerKeyProperty =
-        schemaJson.definitions.Strings.properties[topLevelStringsKey];
-
+    const outerValue = isObject(definitions[topLevelStringTypeName])
+      ? definitions[topLevelStringTypeName]
+      : undefined;
+    if (outerValue && isObject(outerValue.properties)) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const outerKeyProperty = isObject(stringsDef.properties)
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          (stringsDef as Record<string, any>).properties[topLevelStringsKey]
+        : undefined;
+      let description = "";
+      if (
+        isObject(outerKeyProperty) &&
+        typeof outerKeyProperty.description === "string"
+      ) {
+        description = normalizeDescription(outerKeyProperty.description);
+      }
       stringsSchemaJson[topLevelStringsKey] = {
-        $description: normalizeDescription(
-          outerKeyProperty ? outerKeyProperty.description : "",
-        ),
+        $description: description,
       };
-
       parseProperties(
-        outerValue.properties,
-        stringsSchemaJson[topLevelStringsKey],
+        (outerValue as Record<string, any>).properties,
+        stringsSchemaJson[topLevelStringsKey] as Record<string, unknown>,
       );
     }
   });
-
   return stringsSchemaJson;
 };
 
@@ -167,37 +194,28 @@ const getNestedStringsObjectDescriptions = (
  * @remarks Non-leaf node keys will have values set to "---".
  */
 const generateCsvValuesByKey = (
-  /** @type {Object} */ nestedStringsObjectDescriptions,
-  /** @type {Object} */ englishJson,
-  /** @type {Object} */ localeJson,
-) => {
-  const csvValuesByKey = {};
-
+  nestedStringsObjectDescriptions: Record<string, unknown>,
+  englishJson: Record<string, unknown>,
+  localeJson: Record<string, unknown>,
+): Record<string, string> => {
+  const csvValuesByKey: Record<string, string> = {};
   const flatEnJson = flattenObject(englishJson);
   const flatLocaleJson = flattenObject(localeJson);
   const flatNestedStringsObjectDescriptions = flattenObject(
     nestedStringsObjectDescriptions,
   );
-
-  // Checks matched keys with English and nonEnglish descriptions
-  // if keys are matched get description value from strings.schema.strings
   for (const key in flatLocaleJson) {
     if (key === "$schema") {
       continue;
     }
-
     csvValuesByKey[key] = [
       flatEnJson[key] || "---",
       flatLocaleJson[key] || "---",
       flatNestedStringsObjectDescriptions[key] || "",
     ]
-      .map(
-        // In CSV files '"' is escaped as '""'
-        (/** @type string */ segment) => `"${segment.replaceAll('"', '""')}"`,
-      )
+      .map((segment: string) => `"${segment.replaceAll('"', '""')}"`)
       .join(",");
   }
-
   return csvValuesByKey;
 };
 
@@ -207,7 +225,9 @@ const generateCsvValuesByKey = (
  * Modernized and simplified version of:
  * http://whitfin.io/sorting-object-recursively-node-jsjavascript/
  */
-const recursivelySortObjectByKeys = (/** @type Object */ object) => {
+const recursivelySortObjectByKeys = (
+  object: Record<string, unknown>,
+): Record<string, unknown> => {
   const sortedKeys = [...Object.keys(object)].sort((key1, key2) =>
     key1.toUpperCase() < key2.toUpperCase()
       ? -1
@@ -215,25 +235,22 @@ const recursivelySortObjectByKeys = (/** @type Object */ object) => {
         ? 1
         : 0,
   );
-
   const sortedObject = sortedKeys.reduce(
-    (acc, key) => ({
+    (acc: Record<string, unknown>, key: string) => ({
       ...acc,
-      [key]:
-        typeof object[key] === "object"
-          ? recursivelySortObjectByKeys(object[key])
-          : object[key],
+      [key]: isObject(object[key])
+        ? recursivelySortObjectByKeys(object[key])
+        : object[key],
     }),
     {},
   );
-
   return sortedObject;
 };
 
 /**
  * Function converts json to csv
  */
-const jsonToCsv = (obj) => {
+const jsonToCsv = (obj: Record<string, string>): string => {
   const headerRow = '"Key","English","Translation","Description"';
   const csv = [headerRow]
     .concat(Object.keys(obj).map((key) => `"${key}",${obj[key]}`))
@@ -247,29 +264,36 @@ const jsonToCsv = (obj) => {
 // ==================
 
 const convertStringsJsonToCsv = async () => {
-  const [schemaJson, englishJson, localeJson] = await Promise.all([
+  const [schemaJsonRaw, englishJsonRaw, localeJsonRaw] = await Promise.all([
     readFileAndParse("src/strings/strings.schema.json"),
     readFileAndParse("src/strings/stringsEn.json"),
     readFileAndParse(args.in),
   ]);
 
+  const schemaJson = isObject(schemaJsonRaw) ? schemaJsonRaw : {};
+  const englishJson = isObject(englishJsonRaw) ? englishJsonRaw : {};
+  const localeJson = isObject(localeJsonRaw) ? localeJsonRaw : {};
+
   const nestedStringsObjectDescriptions =
     getNestedStringsObjectDescriptions(schemaJson);
-
   const csvValuesByKey = generateCsvValuesByKey(
     nestedStringsObjectDescriptions,
     englishJson,
     localeJson,
   );
-
   /**
    * Create CSV file
    */
-  await writeFile(
-    args.out,
-    jsonToCsv(recursivelySortObjectByKeys(csvValuesByKey)),
-    "utf-8",
-  );
+
+  // Convert sorted object to Record<string, string> for jsonToCsv
+  const sortedCsvValues: Record<string, string> = {};
+  const sorted = recursivelySortObjectByKeys(csvValuesByKey);
+  Object.keys(sorted).forEach((key) => {
+    const val = sorted[key];
+    sortedCsvValues[key] = typeof val === "string" ? val : String(val);
+  });
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  await writeFile(args.out, jsonToCsv(sortedCsvValues), "utf-8");
 };
 
 void convertStringsJsonToCsv();

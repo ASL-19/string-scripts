@@ -13,11 +13,6 @@
       "name": "Min Van",
       "email": "min@asl19.org",
       "url": "https://asl19.org/"
-    },
-    {
-      "name": "Susan Wilson",
-      "email": "susan@asl19.org",
-      "url": "https://asl19.org/"
     }
   ],
   "license": "GPL-3.0-or-later",
@@ -38,7 +33,9 @@
   },
   "sideEffects": false,
   "bin": {
-    "string-scripts": "./dist/scripts/string-scripts.js"
+    "convertStringsCsvToJson": "./dist/convertStringsCsvToJson.js",
+    "convertStringsJsonToCsv": "./dist/convertStringsJsonToCsv.js",
+    "syncAndSortStrings": "./dist/syncAndSortStrings.js"
   },
   "scripts": {
     "build": "npm run rm-dist && npm run tsc",
@@ -56,9 +53,12 @@
     "tsc-watch": "tsc --project tsconfig-dist.json --watch",
     "tsc-check": "tsc --project tsconfig-dist.json --noEmit",
     "test-scripts": "npm run test-convert-csv-to-json && npm run test-convert-json-to-csv && npm run test-sync-strings",
-    "test-convert-csv-to-json": "node dist/scripts/convertStringsCsvToJson.js --help",
-    "test-convert-json-to-csv": "node dist/scripts/convertStringsJsonToCsv.js --help",
-    "test-sync-strings": "node dist/scripts/syncAndSortStrings.js --help"
+    "test-convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts --help",
+    "test-convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts --help",
+    "test-sync-strings": "tsx src/syncAndSortStrings.ts --help",
+    "convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts",
+    "convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts",
+    "sync-strings": "tsx src/syncAndSortStrings.ts"
   },
   "dependencies": {
     "@types/lodash": "^4.17.20",
@@ -79,6 +79,7 @@
     "npm-run-all2": "^8.0.4",
     "package-changed": "^3.0.0",
     "prettier": "^3.6.2",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3"
   }
 }
