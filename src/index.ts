@@ -1,14 +1,14 @@
 /**
- * A collection of string conversion utilities for ASL19 projects.
+ * Utilities for converting strings JSON files to/from CSV (for translation)
+ * and syncing strings JSON files.
  *
- * This package provides CLI tools for converting between CSV and JSON formats
- * for string translations and syncing multiple translation files.
+ * The CLI scripts (`convertStringsCsvToJson`, `convertStringsJsonToCsv`, and
+ * `syncAndSortStrings`) are thin wrappers around these functions.
  *
  * @packageDocumentation
  */
 
-// Note: This package is primarily designed for CLI usage via bin commands.
-// The main functionality is available through the CLI scripts:
-// - convertStringsCsvToJson
-// - convertStringsJsonToCsv
-// - syncAndSortStrings
+export type { StringsObject } from "./types/StringsObject.js";
+export { default as mergeStringsCsvIntoStrings } from "./utils/mergeStringsCsvIntoStrings.js";
+export { default as stringsJsonToCsv } from "./utils/stringsJsonToCsv.js";
+export { default as syncAndSortLocaleStrings } from "./utils/syncAndSortLocaleStrings.js";

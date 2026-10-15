@@ -33,53 +33,48 @@
   },
   "sideEffects": false,
   "bin": {
-    "convertStringsCsvToJson": "./dist/convertStringsCsvToJson.js",
-    "convertStringsJsonToCsv": "./dist/convertStringsJsonToCsv.js",
-    "syncAndSortStrings": "./dist/syncAndSortStrings.js"
+    "convertStringsCsvToJson": "./dist/bin/convertStringsCsvToJson.js",
+    "convertStringsJsonToCsv": "./dist/bin/convertStringsJsonToCsv.js",
+    "syncAndSortStrings": "./dist/bin/syncAndSortStrings.js"
   },
   "scripts": {
     "build": "npm run rm-dist && npm run tsc",
     "build-lint-test": "npm-run-all -l -p tsc -s lint-test",
-    "rm-dist": "rm -rf dist/*",
     "dev": "npm-run-all -l -p tsc-watch",
-    "eslint-check": "eslint . --ext='js,ts,tsx'",
-    "eslint-fix": "eslint . --ext='js,ts,tsx' --fix",
-    "lint-test": "run-p -l eslint-check prettier-check tsc-check",
+    "eslint-check": "eslint .",
+    "eslint-fix": "eslint . --fix",
+    "lint-test": "run-p -l eslint-check prettier-check tsc-check vitest",
+    "npm-check-updates": "npm-check-updates",
     "prepublishOnly": "run-s rm-dist build-lint-test",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "npm-check-updates": "npm-check-updates",
+    "rm-dist": "rm -rf dist/*",
     "tsc": "tsc --project tsconfig-dist.json",
+    "tsc-check": "tsc --noEmit",
     "tsc-watch": "tsc --project tsconfig-dist.json --watch",
-    "tsc-check": "tsc --project tsconfig-dist.json --noEmit",
-    "test-scripts": "npm run test-convert-csv-to-json && npm run test-convert-json-to-csv && npm run test-sync-strings",
-    "test-convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts --help",
-    "test-convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts --help",
-    "test-sync-strings": "tsx src/syncAndSortStrings.ts --help",
-    "convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts",
-    "convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts",
-    "sync-strings": "tsx src/syncAndSortStrings.ts"
+    "vitest": "vitest run",
+    "vitest-watch": "vitest"
   },
   "dependencies": {
-    "@types/lodash": "^4.17.20",
-    "@types/yargs": "^17.0.33",
     "csv-parse": "^6.1.0",
     "lodash": "^4.17.21",
-    "prettier": "^3.6.2",
-    "ts-pattern": "^5.7.1",
     "yargs": "^18.0.0"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
   },
   "devDependencies": {
     "@asl-19/eslint-config": "^0.9.0",
-    "@microsoft/api-documenter": "^7.26.29",
-    "@microsoft/api-extractor": "^7.52.8",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^22.16.4",
+    "@types/yargs": "^17.0.33",
     "eslint": "^9.31.0",
     "eslint-plugin-sort-keys-fix": "^1.1.2",
     "npm-check-updates": "^18.0.1",
     "npm-run-all2": "^8.0.4",
     "package-changed": "^3.0.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.8.3"
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
