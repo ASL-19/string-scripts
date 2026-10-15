@@ -85,20 +85,29 @@ The function behind each CLI tool is also exported: `stringsJsonToCsv`, `mergeSt
 
 ## Development
 
-This package is developed with Node.js 22+ (see `engines` field in `package.json`).
+This package uses [mise](https://mise.jdx.dev/) to manage the Node.js and [pinact](https://github.com/suzuki-shunsuke/pinact) versions (see [`mise.toml`](./mise.toml)). With mise [activated](https://mise.jdx.dev/getting-started.html#activate-mise) in your shell:
 
 ```sh
-# Watch src and build into dist/ on change
-npm run dev
+# Install Node.js and pinact
+mise install
+```
 
-# Build
+`mise.toml` only lists tools, so mise trusts it without `mise trust`. Keep it that way: adding `[env]`, `[hooks]` or `[tasks]` would let it run code when you `cd` into the folder.
+
+`.npmrc` and `package.json` (`devEngines`, `allowScripts`) configure npm supply-chain gates: a one-day release-age window, approved install scripts only, and registry-only dependencies. See [AGENTS.md](./AGENTS.md#npm-supply-chain-gates) for details.
+
+In this folder:
+
+```sh
+# Run tests in watch mode
+npm test
+
+# Build into dist
 npm run build
 
-# Run ESLint, Prettier, TypeScript, and Vitest checks
-npm run lint-test
-
-# Run Vitest in watch mode
-npm run vitest-watch
+# Install dependencies if needed, then type check, lint, check formatting,
+# run tests, and lint package
+npm run dev-lint-test
 ```
 
 To try the CLI tools during development, build and run them with Node:
@@ -106,6 +115,15 @@ To try the CLI tools during development, build and run them with Node:
 ```sh
 npm run build
 node dist/bin/convertStringsJsonToCsv.js --help
+```
+
+To check for updates to Node.js (in `mise.toml`), npm packages, and GitHub Actions (pinned to commit SHAs in [`.github/workflows`](./.github/workflows)):
+
+```sh
+npm run outdated
+
+# Update GitHub Actions to the latest releases that are at least 7 days old
+npm run pinact-update
 ```
 
 ### Testing in another project

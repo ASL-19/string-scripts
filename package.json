@@ -37,44 +37,61 @@
     "convertStringsJsonToCsv": "./dist/bin/convertStringsJsonToCsv.js",
     "syncAndSortStrings": "./dist/bin/syncAndSortStrings.js"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.17.0",
+      "onFail": "error"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.x",
+      "onFail": "error"
+    }
+  },
   "scripts": {
-    "build": "npm run rm-dist && npm run tsc",
-    "build-lint-test": "npm-run-all -l -p tsc -s lint-test",
-    "dev": "npm-run-all -l -p tsc-watch",
+    "attw-check": "attw --pack . --profile esm-only",
+    "build": "rm -rf dist && tsc --project tsconfig-dist.json",
+    "build-lint-test": "run-s build lint-test",
+    "dev-lint-test": "npm install --no-audit && npm run lint-test",
     "eslint-check": "eslint .",
     "eslint-fix": "eslint . --fix",
-    "lint-test": "run-p -l eslint-check prettier-check tsc-check vitest",
-    "npm-check-updates": "npm-check-updates",
-    "prepublishOnly": "run-s rm-dist build-lint-test",
+    "lint-test": "run-p -l tsc-check eslint-check prettier-check vitest-check publint-check attw-check",
+    "mise-outdated": "mise outdated --local",
+    "npm-outdated": "npm outdated || true",
+    "outdated": "run-s -c -l mise-outdated npm-outdated pinact-outdated",
+    "pinact-outdated": "pinact run --update --check --min-age 7 || true",
+    "pinact-update": "pinact run --update --min-age 7",
+    "prepublishOnly": "npm run build-lint-test",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "rm-dist": "rm -rf dist/*",
-    "tsc": "tsc --project tsconfig-dist.json",
-    "tsc-check": "tsc --noEmit",
-    "tsc-watch": "tsc --project tsconfig-dist.json --watch",
-    "vitest": "vitest run",
-    "vitest-watch": "vitest"
+    "publint-check": "publint",
+    "test": "vitest",
+    "tsc-check": "tsc --noEmit && tsc --noEmit --project tsconfig-dist.json",
+    "vitest-check": "vitest run"
   },
   "dependencies": {
-    "csv-parse": "^6.1.0",
-    "lodash": "^4.17.21",
-    "yargs": "^18.0.0"
+    "csv-parse": "^7.0.3",
+    "lodash": "^4.18.1",
+    "yargs": "^18.2.0"
   },
   "peerDependencies": {
     "prettier": "^3.0.0"
   },
+  "allowScripts": {
+    "fsevents": false
+  },
   "devDependencies": {
-    "@asl-19/eslint-config": "^0.9.0",
-    "@types/lodash": "^4.17.20",
-    "@types/node": "^22.16.4",
-    "@types/yargs": "^17.0.33",
-    "eslint": "^9.31.0",
-    "eslint-plugin-sort-keys-fix": "^1.1.2",
-    "npm-check-updates": "^18.0.1",
-    "npm-run-all2": "^8.0.4",
-    "package-changed": "^3.0.0",
-    "prettier": "^3.6.2",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@asl-19/eslint-config": "^1.0.0",
+    "@types/lodash": "^4.17.26",
+    "@types/node": "^24.19.2",
+    "@types/yargs": "^17.0.35",
+    "eslint": "^10.12.0",
+    "npm-run-all2": "^9.0.3",
+    "prettier": "^3.9.10",
+    "publint": "^0.3.25",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.4"
   }
 }

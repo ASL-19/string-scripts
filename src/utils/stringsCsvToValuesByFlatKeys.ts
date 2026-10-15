@@ -11,18 +11,17 @@ import { parse as csvParseSync } from "csv-parse/sync";
 const stringsCsvToValuesByFlatKeys = (
   stringsCsvTextContent: string,
 ): Record<string, string> => {
-  const [parsedHeaderLine, ...parsedStringLines] = csvParseSync(
-    stringsCsvTextContent,
-    {
-      // Handle byte order mark (added by convertStringsJsonToCsv for Excel)
-      bom: true,
-      trim: true,
-    },
-  );
+  const parsedLines = csvParseSync(stringsCsvTextContent, {
+    // Handle byte order mark (added by convertStringsJsonToCsv for Excel)
+    bom: true,
+    trim: true,
+  });
 
-  if (!parsedHeaderLine) {
+  if (parsedLines.length === 0) {
     throw new Error("Provided CSV is malformed (empty?)");
   }
+
+  const [parsedHeaderLine, ...parsedStringLines] = parsedLines;
 
   const keyIndex = parsedHeaderLine.indexOf("Key");
   const translationIndex = parsedHeaderLine.indexOf("Translation");

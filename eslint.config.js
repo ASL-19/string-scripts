@@ -1,6 +1,3 @@
-// We should be able to remove the @ts-expect-error and eslint-disable-next-line
-// once we fix the typing of @asl-19/eslint-config
-
 import asl19 from "@asl-19/eslint-config";
 import { defineConfig } from "eslint/config";
 
