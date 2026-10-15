@@ -2,11 +2,7 @@
   "cSpell.words": [
     "destructure",
     "heaslip",
-    "nodenext",
     "Perso",
-    "rushstack",
-    "tsdoc",
-    "unscoped",
     "yalc"
   ],
   "editor.codeActionsOnSave": {
@@ -17,9 +13,6 @@
     "javascript",
     "typescript"
   ],
-  "files.associations": {
-    "api-extractor.json": "jsonc"
-  },
   "editor.formatOnSave": false,
   "editor.tabSize": 2,
   "editor.unicodeHighlight.allowedCharacters": {
@@ -40,9 +33,6 @@
     "editor.formatOnSave": true
   },
   "search.exclude": {
-    "api-extractor/**/*": true,
-    "CHANGELOG": true,
-    "docs/**/*": true,
     "package-lock.json": true,
     "LICENSE": true
   },
