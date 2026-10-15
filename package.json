@@ -1,0 +1,85 @@
+{
+  "name": "@asl-19/string-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CLI utilities for converting between CSV and JSON formats for string translations and syncing multiple translation files",
+  "contributors": [
+    {
+      "name": "Grant Heaslip",
+      "email": "grant@asl19.org",
+      "url": "https://asl19.org/"
+    },
+    {
+      "name": "Min Van",
+      "email": "min@asl19.org",
+      "url": "https://asl19.org/"
+    }
+  ],
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ASL-19/string-scripts.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts"
+  ],
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "default": "./dist/index.js"
+  },
+  "sideEffects": false,
+  "bin": {
+    "convertStringsCsvToJson": "./dist/convertStringsCsvToJson.js",
+    "convertStringsJsonToCsv": "./dist/convertStringsJsonToCsv.js",
+    "syncAndSortStrings": "./dist/syncAndSortStrings.js"
+  },
+  "scripts": {
+    "build": "npm run rm-dist && npm run tsc",
+    "build-lint-test": "npm-run-all -l -p tsc -s lint-test",
+    "rm-dist": "rm -rf dist/*",
+    "dev": "npm-run-all -l -p tsc-watch",
+    "eslint-check": "eslint . --ext='js,ts,tsx'",
+    "eslint-fix": "eslint . --ext='js,ts,tsx' --fix",
+    "lint-test": "run-p -l eslint-check prettier-check tsc-check",
+    "prepublishOnly": "run-s rm-dist build-lint-test",
+    "prettier-check": "prettier --check .",
+    "prettier-fix": "prettier --write .",
+    "npm-check-updates": "npm-check-updates",
+    "tsc": "tsc --project tsconfig-dist.json",
+    "tsc-watch": "tsc --project tsconfig-dist.json --watch",
+    "tsc-check": "tsc --project tsconfig-dist.json --noEmit",
+    "test-scripts": "npm run test-convert-csv-to-json && npm run test-convert-json-to-csv && npm run test-sync-strings",
+    "test-convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts --help",
+    "test-convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts --help",
+    "test-sync-strings": "tsx src/syncAndSortStrings.ts --help",
+    "convert-csv-to-json": "tsx src/convertStringsCsvToJson.ts",
+    "convert-json-to-csv": "tsx src/convertStringsJsonToCsv.ts",
+    "sync-strings": "tsx src/syncAndSortStrings.ts"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.17.20",
+    "@types/yargs": "^17.0.33",
+    "csv-parse": "^6.1.0",
+    "lodash": "^4.17.21",
+    "prettier": "^3.6.2",
+    "ts-pattern": "^5.7.1",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@asl-19/eslint-config": "^0.9.0",
+    "@microsoft/api-documenter": "^7.26.29",
+    "@microsoft/api-extractor": "^7.52.8",
+    "@types/node": "^22.16.4",
+    "eslint": "^9.31.0",
+    "eslint-plugin-sort-keys-fix": "^1.1.2",
+    "npm-check-updates": "^18.0.1",
+    "npm-run-all2": "^8.0.4",
+    "package-changed": "^3.0.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.8.3"
+  }
+}

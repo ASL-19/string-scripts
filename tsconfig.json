@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "incremental": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "strict": true,
+    "target": "es2021"
+  },
+  "include": [
+    "*.mjs",
+    "*.js",
+    "*.ts",
+    "src/**/*.ts*"
+  ]
+}
