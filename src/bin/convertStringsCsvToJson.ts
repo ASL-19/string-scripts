@@ -37,13 +37,26 @@ assertPathExtension({ argName: "out", extension: ".json", path: args.out });
 
 runCli(async () => {
   const [currentStrings, stringsCsvTextContent] = await Promise.all([
-    readJsonObjectFile(args.out, { missingFileValue: {} }),
+    readJsonObjectFile(args.out, { allowMissing: true }),
     // eslint-disable-next-line security/detect-non-literal-fs-filename
     readFile(args.in, "utf-8"),
   ]);
 
-  await writePrettierJsonFile(
-    args.out,
-    mergeStringsCsvIntoStrings({ currentStrings, stringsCsvTextContent }),
-  );
+  const { mergedStrings, unknownFlatKeys } = mergeStringsCsvIntoStrings({
+    currentStrings: currentStrings ?? {},
+    stringsCsvTextContent,
+  });
+
+  // If the JSON file didn’t exist every key is unknown, so there’s no point
+  // warning
+  if (currentStrings && unknownFlatKeys.length > 0) {
+    console.warn(
+      [
+        `Warning: ${args.in} has translations for keys that aren’t strings in ${args.out} (typos, or keys removed since the CSV was generated?). They were merged anyway:`,
+        ...unknownFlatKeys.map((flatKey) => `  ${flatKey}`),
+      ].join("\n"),
+    );
+  }
+
+  await writePrettierJsonFile(args.out, mergedStrings);
 });

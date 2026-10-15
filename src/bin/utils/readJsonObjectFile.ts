@@ -6,25 +6,33 @@ import isObject from "../../utils/isObject.js";
 /**
  * Read and parse a JSON file whose root is an object.
  *
- * @param missingFileValue - Value to return if the file doesn’t exist (if not
- * provided a missing file throws)
+ * @param allowMissing - If true, return null if the file doesn’t exist
+ * (otherwise a missing file throws)
  */
-const readJsonObjectFile = async (
+async function readJsonObjectFile(
   filePath: string,
-  { missingFileValue }: { missingFileValue?: Record<string, unknown> } = {},
-): Promise<Record<string, unknown>> => {
+  options?: { allowMissing?: false },
+): Promise<Record<string, unknown>>;
+async function readJsonObjectFile(
+  filePath: string,
+  options: { allowMissing: true },
+): Promise<null | Record<string, unknown>>;
+async function readJsonObjectFile(
+  filePath: string,
+  { allowMissing = false }: { allowMissing?: boolean } = {},
+): Promise<null | Record<string, unknown>> {
   let textContent: string;
 
   try {
     textContent = await readFile(filePath, "utf-8");
   } catch (error) {
     if (
-      missingFileValue &&
+      allowMissing &&
       isObject(error) &&
       "code" in error &&
       error.code === "ENOENT"
     ) {
-      return missingFileValue;
+      return null;
     }
 
     throw error;
@@ -37,6 +45,6 @@ const readJsonObjectFile = async (
   }
 
   return parsed;
-};
+}
 
 export default readJsonObjectFile;

@@ -6,7 +6,8 @@ import mergeStringsCsvIntoStrings from "./mergeStringsCsvIntoStrings.js";
  * Merge CSV into empty strings object.
  */
 const csvToStrings = (stringsCsvTextContent: string) =>
-  mergeStringsCsvIntoStrings({ currentStrings: {}, stringsCsvTextContent });
+  mergeStringsCsvIntoStrings({ currentStrings: {}, stringsCsvTextContent })
+    .mergedStrings;
 
 const csv = [
   '"Key","Source","Translation","Description"',
@@ -28,12 +29,15 @@ test("merges translations into existing strings without mutating them", () => {
       stringsCsvTextContent: csv,
     }),
   ).toEqual({
-    $schema: "./strings.schema.json",
-    page: {
-      quote: "او گفت «سلام»",
-      title: "عنوان",
-      untranslated: "Untranslated",
+    mergedStrings: {
+      $schema: "./strings.schema.json",
+      page: {
+        quote: "او گفت «سلام»",
+        title: "عنوان",
+        untranslated: "Untranslated",
+      },
     },
+    unknownFlatKeys: ["page.quote"],
   });
 
   expect(currentStrings.page.title).toBe("Old");
@@ -43,6 +47,22 @@ test("nests dot-separated keys", () => {
   expect(
     csvToStrings('"Key","Translation"\n"a.b.c","1"\n"a.b.d","2"\n"e","3"'),
   ).toEqual({ a: { b: { c: "1", d: "2" } }, e: "3" });
+});
+
+test("returns keys that weren’t already strings as unknownFlatKeys", () => {
+  expect(
+    mergeStringsCsvIntoStrings({
+      currentStrings: { a: "A", b: { c: "C" } },
+      stringsCsvTextContent:
+        '"Key","Translation"\n"a","1"\n"b","2"\n"b.c","3"\n"d","4"',
+    }).unknownFlatKeys,
+  ).toEqual(["b", "d"]);
+});
+
+test("handles byte order mark", () => {
+  expect(csvToStrings('\uFEFF"Key","Translation"\n"a","عنوان"')).toEqual({
+    a: "عنوان",
+  });
 });
 
 test("preserves quotes in translations", () => {

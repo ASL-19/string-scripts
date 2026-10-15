@@ -66,7 +66,9 @@ runCli(async () => {
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   await writeFile(
     args.out,
-    stringsJsonToCsv({ localeStrings, schemaJson, sourceStrings }),
+    // Prepend byte order mark so Excel detects UTF-8 (otherwise non-Latin
+    // text is garbled)
+    "\uFEFF" + stringsJsonToCsv({ localeStrings, schemaJson, sourceStrings }),
     "utf-8",
   );
 });

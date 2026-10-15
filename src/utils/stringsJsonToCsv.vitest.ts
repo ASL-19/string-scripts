@@ -59,6 +59,6 @@ test("round-trips through mergeStringsCsvIntoStrings", () => {
         schemaJson: testSchemaJson,
         sourceStrings,
       }),
-    }),
+    }).mergedStrings,
   ).toEqual(localeStrings);
 });

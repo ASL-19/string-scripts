@@ -14,6 +14,8 @@ const stringsCsvToValuesByFlatKeys = (
   const [parsedHeaderLine, ...parsedStringLines] = csvParseSync(
     stringsCsvTextContent,
     {
+      // Handle byte order mark (added by convertStringsJsonToCsv for Excel)
+      bom: true,
       trim: true,
     },
   );
