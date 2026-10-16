@@ -1,12 +1,12 @@
 {
   "cSpell.words": [
+    "attw",
     "destructure",
+    "EBADDEVENGINES",
     "heaslip",
     "nodenext",
     "Perso",
-    "rushstack",
-    "tsdoc",
-    "unscoped",
+    "pinact",
     "yalc"
   ],
   "editor.codeActionsOnSave": {
@@ -17,9 +17,6 @@
     "javascript",
     "typescript"
   ],
-  "files.associations": {
-    "api-extractor.json": "jsonc"
-  },
   "editor.formatOnSave": false,
   "editor.tabSize": 2,
   "editor.unicodeHighlight.allowedCharacters": {
@@ -40,11 +37,10 @@
     "editor.formatOnSave": true
   },
   "search.exclude": {
-    "api-extractor/**/*": true,
     "CHANGELOG": true,
-    "docs/**/*": true,
     "package-lock.json": true,
     "LICENSE": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }

@@ -2,7 +2,7 @@
   "name": "@asl-19/string-scripts",
   "version": "1.0.0",
   "type": "module",
-  "description": "Shared JavaScript utility functions for ASL19 projects",
+  "description": "CLI utilities for converting between CSV and JSON formats for string translations and syncing multiple translation files",
   "contributors": [
     {
       "name": "Grant Heaslip",
@@ -13,11 +13,6 @@
       "name": "Min Van",
       "email": "min@asl19.org",
       "url": "https://asl19.org/"
-    },
-    {
-      "name": "Susan Wilson",
-      "email": "susan@asl19.org",
-      "url": "https://asl19.org/"
     }
   ],
   "license": "GPL-3.0-or-later",
@@ -26,7 +21,7 @@
     "url": "git+https://github.com/ASL-19/string-scripts.git"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "files": [
     "dist/**/*.js",
@@ -37,40 +32,66 @@
     "default": "./dist/index.js"
   },
   "sideEffects": false,
+  "bin": {
+    "convertStringsCsvToJson": "dist/bin/convertStringsCsvToJson.js",
+    "convertStringsJsonToCsv": "dist/bin/convertStringsJsonToCsv.js",
+    "syncAndSortStrings": "dist/bin/syncAndSortStrings.js"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.17.0",
+      "onFail": "error"
+    },
+    "runtime": {
+      "name": "node",
+      "version": "24.x",
+      "onFail": "error"
+    }
+  },
   "scripts": {
-    "api-extractor-check": "api-extractor run --verbose",
-    "api-extractor-update": "api-extractor run --local --verbose && api-documenter markdown --input-folder ./api-extractor --output-folder ./docs",
-    "build-lint-test": "npm-run-all -l -p tsc -s lint-test",
-    "rm-dist": "rm -rf dist/*",
-    "dev": "npm-run-all -l -s package-changed -p tsc-watch",
-    "dev-build-update": "npm-run-all -l -p package-changed rm-dist -s tsc api-extractor-update",
-    "dev-lint-test": "run-s package-changed lint-test",
-    "eslint-check": "eslint . --ext='js,ts,tsx'",
-    "eslint-fix": "eslint . --ext='js,ts,tsx' --fix",
-    "lint-test": "run-p -l api-extractor-check eslint-check prettier-check tsc-check",
-    "package-changed": "package-changed",
-    "prepublishOnly": "run-s rm-dist build-lint-test",
+    "attw-check": "attw --pack . --profile esm-only",
+    "build": "rm -rf dist && tsc --project tsconfig-dist.json",
+    "build-lint-test": "run-s build lint-test",
+    "dev-lint-test": "npm install --no-audit && npm run lint-test",
+    "eslint-check": "eslint .",
+    "eslint-fix": "eslint . --fix",
+    "lint-test": "run-p -l tsc-check eslint-check prettier-check vitest-check publint-check attw-check",
+    "mise-outdated": "mise outdated --local",
+    "npm-outdated": "npm outdated || true",
+    "outdated": "run-s -c -l mise-outdated npm-outdated pinact-outdated",
+    "pinact-outdated": "pinact run --update --check --min-age 7 || true",
+    "pinact-update": "pinact run --update --min-age 7",
+    "prepublishOnly": "npm run build-lint-test",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "npm-check-updates": "npm-check-updates",
-    "tsc": "tsc --project tsconfig-dist.json",
-    "tsc-watch": "tsc --project tsconfig-dist.json --watch",
-    "tsc-check": "tsc --project tsconfig-dist.json --noEmit"
+    "publint-check": "publint",
+    "test": "vitest",
+    "tsc-check": "tsc --noEmit && tsc --noEmit --project tsconfig-dist.json",
+    "vitest-check": "vitest run"
   },
   "dependencies": {
-    "ts-pattern": "^5.7.1"
+    "csv-parse": "^7.0.3",
+    "lodash": "^4.18.1",
+    "yargs": "^18.2.0"
+  },
+  "peerDependencies": {
+    "prettier": "^3.0.0"
+  },
+  "allowScripts": {
+    "fsevents": false
   },
   "devDependencies": {
-    "@asl-19/eslint-config": "^0.9.0",
-    "@microsoft/api-documenter": "^7.26.29",
-    "@microsoft/api-extractor": "^7.52.8",
-    "@types/node": "^22.16.4",
-    "eslint": "^9.31.0",
-    "eslint-plugin-sort-keys-fix": "^1.1.2",
-    "npm-check-updates": "^18.0.1",
-    "npm-run-all2": "^8.0.4",
-    "package-changed": "^3.0.0",
-    "prettier": "^3.6.2",
-    "typescript": "^5.8.3"
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@asl-19/eslint-config": "^1.0.0",
+    "@types/lodash": "^4.17.26",
+    "@types/node": "^24.19.2",
+    "@types/yargs": "^17.0.35",
+    "eslint": "^10.12.0",
+    "npm-run-all2": "^9.0.3",
+    "prettier": "^3.9.10",
+    "publint": "^0.3.25",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.4"
   }
 }

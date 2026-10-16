@@ -1,8 +1,7 @@
 .DS_Store
 
-/.packagehash
+/.claude/settings.local.json
 /.yalc/
 /dist/
 /node_modules/
-/temp/
 /yalc.lock

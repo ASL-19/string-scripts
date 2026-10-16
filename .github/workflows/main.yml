@@ -1,12 +1,22 @@
-on: push
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
-  build-lint-test:
-    runs-on: ubuntu-22.04
+  build-check:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version-file: .node-version
-      - run: npm install
+          persist-credentials: false
+      - uses: jdx/mise-action@2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca # v5.1.1
+        with:
+          install_args: node
+      - run: npm ci
       - run: npm run build-lint-test
