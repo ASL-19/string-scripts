@@ -33,9 +33,9 @@
   },
   "sideEffects": false,
   "bin": {
-    "convertStringsCsvToJson": "./dist/bin/convertStringsCsvToJson.js",
-    "convertStringsJsonToCsv": "./dist/bin/convertStringsJsonToCsv.js",
-    "syncAndSortStrings": "./dist/bin/syncAndSortStrings.js"
+    "convertStringsCsvToJson": "dist/bin/convertStringsCsvToJson.js",
+    "convertStringsJsonToCsv": "dist/bin/convertStringsJsonToCsv.js",
+    "syncAndSortStrings": "dist/bin/syncAndSortStrings.js"
   },
   "devEngines": {
     "packageManager": {
