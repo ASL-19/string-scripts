@@ -21,7 +21,7 @@
     "url": "git+https://github.com/ASL-19/string-scripts.git"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12"
   },
   "files": [
     "dist/**/*.js",
