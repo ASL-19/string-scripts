@@ -1,4 +1,4 @@
-import lodashFpMerge from "lodash/fp/merge.js";
+import lodashMerge from "lodash/merge.js";
 
 /**
  * Convert object of values by flat dot-separated key to nested object.
@@ -12,16 +12,22 @@ import lodashFpMerge from "lodash/fp/merge.js";
  */
 const valuesByFlatKeysToNestedObject = (
   valuesByFlatKeys: Record<string, string>,
-): Record<string, unknown> =>
-  Object.entries(valuesByFlatKeys).reduce<Record<string, unknown>>(
-    (acc, [flatKey, value]) => {
-      const valueObject = flatKey
-        .split(".")
-        .reduceRight<unknown>((acc, elem) => ({ [elem]: acc }), value);
+): Record<string, unknown> => {
+  const nestedObject: Record<string, unknown> = {};
 
-      return lodashFpMerge(acc, valueObject);
-    },
-    {},
+  // lodash merge mutates its first argument, which is fine since it’s a new
+  // object (and it skips keys like "__proto__", so a CSV can’t pollute
+  // Object.prototype)
+  lodashMerge(
+    nestedObject,
+    ...Object.entries(valuesByFlatKeys).map(([flatKey, value]) =>
+      flatKey
+        .split(".")
+        .reduceRight<unknown>((acc, segment) => ({ [segment]: acc }), value),
+    ),
   );
+
+  return nestedObject;
+};
 
 export default valuesByFlatKeysToNestedObject;

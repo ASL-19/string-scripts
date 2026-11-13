@@ -62,3 +62,19 @@ test("round-trips through mergeStringsCsvIntoStrings", () => {
     }).mergedStrings,
   ).toEqual(localeStrings);
 });
+
+test("handles keys named like Object.prototype properties", () => {
+  expect(
+    stringsJsonToCsv({
+      localeStrings: { constructor: "سازنده", toString: "رشته" },
+      schemaJson: testSchemaJson,
+      sourceStrings: {},
+    }),
+  ).toBe(
+    [
+      '"Key","Source","Translation","Description"',
+      '"constructor","---","سازنده",""',
+      '"toString","---","رشته",""',
+    ].join("\n"),
+  );
+});

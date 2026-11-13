@@ -1,5 +1,13 @@
 # @asl-19/string-scripts changelog
 
+## 1.1.0 [2026-11-13]
+
+- `convertStringsJsonToCsv` accepts any ts-json-schema-generator schema whose root type is an object type: it starts at the type the schema’s root `$ref` refers to (falling back to `definitions.Strings`) and follows `$ref`s wherever they appear, instead of requiring a `definitions.Strings` type whose top-level properties have types named `${Key}Strings`. Array items don’t get descriptions.
+- `convertStringsJsonToCsv` writes descriptions for strings it used to skip: top-level keys whose types are defined inline or don’t follow the `${Key}Strings` naming, and nested properties whose types are named types. A property whose own docstring is empty gets its named type’s docstring.
+- `convertStringsJsonToCsv` exits with an error if the schema has a `$ref` that doesn’t resolve, rather than skipping it
+- `convertStringsJsonToCsv` no longer crashes on keys named like `Object.prototype` properties (e.g. `constructor`) that are missing from the source strings or the schema
+- `convertStringsJsonToCsv` writes `---` for non-string values (e.g. numbers), which aren’t valid in strings JSON files, rather than converting them to strings
+
 ## 1.0.1 [2026-11-13]
 
 - `syncAndSortStrings` no longer converts arrays of strings into objects with numeric keys
