@@ -1,5 +1,9 @@
 # @asl-19/string-scripts changelog
 
+## 1.0.1 [2026-11-13]
+
+- `syncAndSortStrings` no longer converts arrays of strings into objects with numeric keys
+
 ## 1.0.0 [2026-10-16]
 
 Initial release, based on the `convertStringsCsvToJson`, `convertStringsJsonToCsv`, and `syncAndSortStrings` scripts in ASL19 website repositories.

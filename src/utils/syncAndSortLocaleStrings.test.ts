@@ -51,3 +51,23 @@ test("doesn’t mutate locale strings", () => {
 
   expect(localeStrings).toEqual({ page: { title: "عنوان" } });
 });
+
+test("keeps arrays as arrays, in their original order", () => {
+  const synced = syncAndSortLocaleStrings({
+    localeStrings: { page: { items: ["دوم", "اول"] } },
+    sourceStrings: { page: { items: ["Second", "First"] } },
+  });
+
+  expect(JSON.stringify(synced)).toBe('{"page":{"items":["دوم","اول"]}}');
+});
+
+test("sorts objects nested in arrays", () => {
+  const synced = syncAndSortLocaleStrings({
+    localeStrings: {},
+    // Intentionally unsorted
+    // eslint-disable-next-line perfectionist/sort-objects
+    sourceStrings: { items: [{ b: "1", a: "2" }] },
+  });
+
+  expect(JSON.stringify(synced)).toBe('{"items":[{"a":"2","b":"1"}]}');
+});
