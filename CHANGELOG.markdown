@@ -1,6 +1,6 @@
 # @asl-19/string-scripts changelog
 
-## Unreleased
+## 1.0.1 [2026-11-13]
 
 - `syncAndSortStrings` no longer converts arrays of strings into objects with numeric keys
 
