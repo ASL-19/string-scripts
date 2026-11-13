@@ -1,10 +1,31 @@
-import flattenObject from "./flattenObject.js";
-import getNestedStringsObjectDescriptions from "./getNestedStringsObjectDescriptions.js";
+import getFlatEntries from "./getFlatEntries.js";
+import getSchemaDescriptionsByFlatKey from "./getSchemaDescriptionsByFlatKey.js";
 
 /**
  * Escape CSV field value (wrap in quotes, escape '"' as '""').
  */
 const csvField = (value: string) => `"${value.replaceAll('"', '""')}"`;
+
+/**
+ * Get a strings object value’s “Source” or “Translation” cell ("---" for
+ * non-leaf nodes and missing, empty or non-string values).
+ */
+const getStringCell = (value: unknown) =>
+  typeof value === "string" && value !== "" ? value : "---";
+
+/**
+ * Compare strings case-insensitively.
+ */
+const compareCaseInsensitive = (string1: string, string2: string) => {
+  const upperCaseString1 = string1.toUpperCase();
+  const upperCaseString2 = string2.toUpperCase();
+
+  return upperCaseString1 < upperCaseString2
+    ? -1
+    : upperCaseString1 > upperCaseString2
+      ? 1
+      : 0;
+};
 
 /**
  * Convert strings objects to CSV text content with columns "Key", "Source",
@@ -27,27 +48,20 @@ const stringsJsonToCsv = ({
   /** Source (usually English) strings, used for the “Source” column */
   sourceStrings: Record<string, unknown>;
 }): string => {
-  const flatSourceStrings = flattenObject(sourceStrings);
-  const flatLocaleStrings = flattenObject(localeStrings);
-  const flatDescriptions = flattenObject(
-    getNestedStringsObjectDescriptions(schemaJson),
-  );
+  const sourceValuesByFlatKey = new Map(getFlatEntries(sourceStrings));
+  const descriptionsByFlatKey = getSchemaDescriptionsByFlatKey(schemaJson);
 
-  const rows = Object.keys(flatLocaleStrings)
-    .filter((key) => key !== "$schema")
-    .sort((key1, key2) =>
-      key1.toUpperCase() < key2.toUpperCase()
-        ? -1
-        : key1.toUpperCase() > key2.toUpperCase()
-          ? 1
-          : 0,
+  const rows = getFlatEntries(localeStrings)
+    .filter(([flatKey]) => flatKey !== "$schema")
+    .sort(([flatKey1], [flatKey2]) =>
+      compareCaseInsensitive(flatKey1, flatKey2),
     )
-    .map((key) =>
+    .map(([flatKey, value]) =>
       [
-        key,
-        flatSourceStrings[key] || "---",
-        flatLocaleStrings[key] || "---",
-        flatDescriptions[key] || "",
+        flatKey,
+        getStringCell(sourceValuesByFlatKey.get(flatKey)),
+        getStringCell(value),
+        descriptionsByFlatKey.get(flatKey) ?? "",
       ]
         .map(csvField)
         .join(","),

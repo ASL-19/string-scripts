@@ -32,8 +32,8 @@ const stringsCsvToValuesByFlatKeys = (
     );
   }
 
-  return parsedStringLines.reduce<Record<string, string>>(
-    (acc, parsedStringLine) => {
+  return Object.fromEntries(
+    parsedStringLines.flatMap((parsedStringLine) => {
       // csv-parse’s trim option doesn’t trim whitespace inside quotes
       const key = parsedStringLine[keyIndex]?.trim();
       const value = parsedStringLine[translationIndex]?.trim();
@@ -45,9 +45,8 @@ const stringsCsvToValuesByFlatKeys = (
       }
 
       // We filter out "---" values so the returned object is only leaf nodes.
-      return value === "---" ? acc : { ...acc, [key]: value };
-    },
-    {},
+      return value === "---" ? [] : [[key, value]];
+    }),
   );
 };
 

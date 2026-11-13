@@ -96,3 +96,9 @@ test("throws on malformed line", () => {
     /malformed/,
   );
 });
+
+test("doesn’t pollute Object.prototype", () => {
+  csvToStrings('"Key","Translation"\n"__proto__.polluted","yes"');
+
+  expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+});

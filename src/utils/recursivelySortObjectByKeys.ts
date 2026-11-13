@@ -12,19 +12,15 @@ const recursivelySortValue = (value: unknown): unknown =>
       : value;
 
 /**
- * Recursively sort object by keys (case-sensitive).
- *
- * Modernized and simplified version of:
- * http://whitfin.io/sorting-object-recursively-node-jsjavascript/
+ * Recursively sort object by keys (case-sensitive, by UTF-16 code unit).
  */
 const recursivelySortObjectByKeys = (
   object: Record<string, unknown>,
 ): Record<string, unknown> =>
-  Object.keys(object)
-    .sort((key1, key2) => (key1 < key2 ? -1 : key1 > key2 ? 1 : 0))
-    .reduce<Record<string, unknown>>(
-      (acc, key) => ({ ...acc, [key]: recursivelySortValue(object[key]) }),
-      {},
-    );
+  Object.fromEntries(
+    Object.keys(object)
+      .sort()
+      .map((key) => [key, recursivelySortValue(object[key])]),
+  );
 
 export default recursivelySortObjectByKeys;
